@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>WebLooper360 v1.0</title>
+    <title>WebLooper 360</title>
     
     <style>
         :root {
@@ -24,7 +24,7 @@
 
             --node-off: #2b2b2b; 
             --node-beat: #444444; 
-            --node-on: #888888; 
+            --node-on: #39ff14; 
             --node-led: #ffffff;
         }
 
@@ -50,7 +50,7 @@
         header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 10px; }
         .header-left { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; flex-shrink: 1; overflow: hidden; }
         #app-title { font-size: 20px; font-weight:900; display: flex; align-items: baseline; gap: 6px; white-space: nowrap;}
-        .title-box { background: var(--gh-purple); color: white; padding: 4px 8px; border-radius: 6px; border: 1px solid #6b3ec2; box-shadow: inset 0 1px 2px rgba(255,255,255,0.2); letter-spacing: 0.5px; font-size: 16px;}
+        .title-box { background: var(--gh-purple); color: white; padding: 4px 8px; border-radius: 6px; border: 1px solid #6b3ec2; box-shadow: inset 0 1px 2px rgba(255,255,255,0.2); letter-spacing: 0.5px; }
         .creator-text { font-size: 11px; font-weight: 400; color: var(--text-dim); letter-spacing: 0.2px; padding-left: 2px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
 
         .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
@@ -119,7 +119,7 @@
         .node-wrapper { position: relative; width: 100%; display: flex; justify-content: space-between; }
         .node, .modal-node { width: 6%; height: 20px; background: var(--node-off); border-radius: 2px; cursor: pointer; border: 1px solid #111; transition: background 0.05s, box-shadow 0.05s; }
         .node.beat-node, .modal-node.beat-node { background: var(--node-beat); }
-        .node.active { background: var(--node-on); box-shadow: inset 0 1px 2px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.5); }
+        .node.active { background: var(--node-on); box-shadow: inset 0 1px 2px rgba(0,0,0,0.5), 0 0 8px rgba(57,255,20,0.6); border-color: #2eb80f;}
         .node.playing, .modal-node.playing { background: var(--node-led) !important; box-shadow: 0 0 6px rgba(255,255,255,0.9), inset 0 1px 1px rgba(0,0,0,0.1) !important; border-color: #fff !important; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; }
@@ -178,8 +178,7 @@
     <header>
         <div class="header-left">
             <div id="app-title">
-                <span class="title-box">WebLooper360</span> 
-                <span style="font-size: 12px; font-weight:bold; color: var(--gh-purple);">v1.0</span>
+                <span class="title-box">WebLooper 360</span> 
             </div>
             <div class="creator-text">By Jeremiah Keller</div>
         </div>
@@ -282,27 +281,16 @@
             </div>
 
             <p class="modal-text" style="font-style: italic; border-left: 3px solid var(--border-color); padding-left: 10px; color: var(--text-dim);">
-                WebLooper360 is a free, experimental mobile-first project by Jeremiah Keller. No warranties—just a fun way to make looper pedal style music without requiring extra gear. Just a smartphone and a quiet room. And you can simulate the workflow of a typical guitar pedal that has a built-in editable drum beat.
-            </p>
-
-            <p class="modal-text">
-                <strong>Development Notes:</strong><br>
-                After a 10 year hiatus from building websites for local businesses and music bands, I have recently rediscovered my love for creating code using AI to help build fast, easy access, and free tools.<br><br>
-                Check out my portfolio to see my other programs:<br>
-                <a href="https://360-solutions.github.io/" target="_blank" style="color: var(--accent-blue); text-decoration: none; font-weight: bold;">360 Solutions Portfolio</a>
+                <strong>WebLooper 360</strong> is a free, experimental mobile-first project by Jeremiah Keller. No warranties—just a fun way to practice rhythm. If it helps your music, consider buying me a coffee!
             </p>
 
             <p class="modal-text">
                 <strong>The "Conference Call" Trick:</strong><br>
-                Building a pocket looper that works on a smartphone browser without an audio interface or wired headphones comes with a unique challenge: preventing the microphone from hearing and recording the app's own backing track (audio bleed). WebLooper360 solves this by briefly fooling your smartphone into thinking you're on a speakerphone call while you're in the recording window. That is why you will notice a slightly "lo-fi" quality while recording. But when you hit "DONE" and return to the main screen, it releases the microphone and switches back to higher-quality audio.
+                Building a pocket looper that works on a smartphone browser without an audio interface or wired headphones comes with a unique challenge: preventing the microphone from hearing and recording the app's own backing track (audio bleed). WebLooper solves this by briefly fooling your smartphone into thinking you're on a speakerphone call while you're in the recording window. That is why you will notice a slightly "lo-fi" quality while recording. But when you hit "DONE" and return to the main screen, it releases the microphone and switches back to higher-quality audio.
             </p>
             <p class="modal-text">
-                <strong>The Latency & Bleed Compromise:</strong><br>
-                To further solve bleed, WebLooper360 uses a spotlight cycle. When you hit record, it waits one full cycle to sync up. Then, the backing track drops out while it records you. It is like a spotlight breakdown moment where the band stops and you play alone, keeping perfect time on your own. Then, the rest of the virtual band rejoins you at the beginning of the next cycle. To stay on beat, rely on your internal rhythm and the visual metronome.
-            </p>
-
-            <p class="modal-text" style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border-color);">
-                WebLooper360 is totally free, but any financial support is greatly appreciated. I have links to my tip jar in the Ko-fi or Buy Me a Coffee links at the top right.
+                <strong>The 2-Beat Spotlight Moat:</strong><br>
+                To further solve latency and audio bleed across various sluggish devices, WebLooper uses an extreme spotlight cycle. The backing track drops out precisely two beats before the recording window starts, and remains muted until two beats after it finishes. You are essentially left to keep time using the visual grid during recording. It guarantees zero audio bleed.
             </p>
         </div>
         <div class="modal-footer">
@@ -437,8 +425,8 @@
 
 <script>
     // =========================================================================
-    // WEBLOOPER360 JAVASCRIPT ENGINE
-    // Core logic kept strictly untouched to preserve latency and audio math.
+    // WEBLOOPER JAVASCRIPT ENGINE
+    // Updated: Start Point Marker Logic & 2-Beat Spotlight Moat
     // =========================================================================
 
     let appSettings = {
@@ -482,8 +470,10 @@
     let targetRecordEndStep = 0;
     let targetMicStopStep = 0;
 
-    const RECORD_LOOKAHEAD_STEPS = 8; // Full 2 Beats early to allow iPhone mic spin-up time
-    const RECORD_TAIL_STEPS = 4;      // 1 Beat late for the crossfade tail
+    // INCREASED 2-BEAT SAFETY MOAT FOR ANDROID BLEED PREVENTION
+    const RECORD_LOOKAHEAD_STEPS = 8; // 2 Full Beats Early
+    const RECORD_TAIL_STEPS = 8;      // 2 Full Beats Late for crossfade tail/latency buffer
+    
     let targetBarLength = 16;
     let scheduleAheadTime = 0.50; 
     let sequenceStartTime = 0;
@@ -503,7 +493,7 @@
 
     // --- MEMORY & STORAGE FUNCTIONS ---
     function loadSettings() {
-        const saved = localStorage.getItem('webLooper360_v1');
+        const saved = localStorage.getItem('jLooperSettings');
         if (saved) {
             try { appSettings = JSON.parse(saved); } catch(e) {}
         }
@@ -530,7 +520,7 @@
     }
 
     function saveSettings() {
-        localStorage.setItem('webLooper360_v1', JSON.stringify(appSettings));
+        localStorage.setItem('jLooperSettings', JSON.stringify(appSettings));
         document.getElementById('current-nudge-text').innerText = appSettings.globalNudge + 'ms';
     }
 
@@ -550,8 +540,8 @@
     }
 
     function factoryReset() {
-        if (confirm("Are you sure you want to reset WebLooper360?\n\nThis will clear all saved volume settings, latency nudges, and memory, returning it to absolute factory defaults.")) {
-            localStorage.removeItem('webLooper360_v1');
+        if (confirm("Are you sure you want to reset WebLooper 360?\n\nThis will clear all saved volume settings, latency nudges, and memory, returning it to absolute factory defaults.")) {
+            localStorage.removeItem('jLooperSettings');
             location.reload(); 
         }
     }
@@ -991,15 +981,16 @@
                 
                 // Absolute Step State Machine for Recording
                 
-                // STATE 1: Waiting for the cycle to begin counting down
                 if (recState === 'WAITING_SYNC' && laneRelative === 0) {
                     recState = 'PRE_ROLL';
                 }
 
-                // STATE 2: Pre-roll cycle hits the lookahead trigger, start the hardware mic
+                // 2-BEAT SPOTLIGHT START: Backing track mutes early to ensure zero bleed
                 if (recState === 'PRE_ROLL' && laneRelative === ((targetBarLength - RECORD_LOOKAHEAD_STEPS) % targetBarLength)) {
                     recState = 'MIC_STARTING';
-                    targetRecordStartStep = currentStep + RECORD_LOOKAHEAD_STEPS; // Absolute step locking
+                    targetRecordStartStep = currentStep + RECORD_LOOKAHEAD_STEPS; // Lock musical 1
+                    
+                    masterGain.gain.setTargetAtTime(0, nextStepTime, 0.015); // Spotlight Moat begins
                     
                     audioChunks = []; 
                     let delay = Math.max(0, (nextStepTime - audioCtx.currentTime) * 1000);
@@ -1009,19 +1000,16 @@
                     }, delay); 
                 }
 
-                // STATE 3: The actual musical 1 hits. Flip UI button to red.
+                // THE MUSICAL 1 HITS
                 if (recState === 'MIC_STARTING' && currentStep === targetRecordStartStep) {
                     recState = 'VISUAL_RECORDING';
                     targetRecordEndStep = currentStep + targetBarLength; // Lock absolute end step
-                    
-                    // Mute backing track exactly on the musical 1 so there's no bleed
-                    masterGain.gain.setTargetAtTime(0, nextStepTime, 0.015);
                     
                     let delay = Math.max(0, (nextStepTime - audioCtx.currentTime) * 1000);
                     setTimeout(updateRecBtnUI, delay); 
                 }
 
-                // STATE 4: The musical loop length completes. Drop UI button, but keep mic running for tail.
+                // THE BAR ENDS: Enter tail to capture bleed/latency decay
                 if (recState === 'VISUAL_RECORDING' && currentStep === targetRecordEndStep) {
                     recState = 'TAIL_RECORDING';
                     targetMicStopStep = currentStep + RECORD_TAIL_STEPS;
@@ -1030,12 +1018,11 @@
                     setTimeout(updateRecBtnUI, delay); 
                 }
 
-                // STATE 5: Tail completes. Stop the hardware mic.
+                // 2-BEAT SPOTLIGHT END: Tail completes, hardware mic stops, track unmutes
                 if (recState === 'TAIL_RECORDING' && currentStep === targetMicStopStep) {
                     recState = 'IDLE';
                     
-                    // Unmute backing track after the secret recording tail is completely finished
-                    masterGain.gain.setTargetAtTime(appSettings.masterVol, nextStepTime, 0.015);
+                    masterGain.gain.setTargetAtTime(appSettings.masterVol, nextStepTime, 0.015); // Spotlight Moat ends
                     
                     let delay = Math.max(0, (nextStepTime - audioCtx.currentTime) * 1000);
                     setTimeout(() => { 
@@ -1062,13 +1049,27 @@
         
         let aSec = 0.015;
         let rSec = 0.025;
-        let lookaheadSecs = 0;
+        
+        // START MARKER GRID-LOCK FIX
+        let actualPlayTime = time; // Default: strict grid adherence
+        let finalOffset = 0;       // Default: read file from start
 
         if (trackObj) {
             if (typeof trackObj.attack === 'number') aSec = trackObj.attack / 1000;
             if (typeof trackObj.release === 'number') rSec = trackObj.release / 1000;
+            
             if (trackObj.isUserSample) {
-                lookaheadSecs = (60 / appSettings.tempo) * (RECORD_LOOKAHEAD_STEPS / 4);
+                // If it's a recorded loop, DO NOT shift the play head (actualPlayTime).
+                // Instead, shift the START MARKER reading position inside the file by Lookahead + Latency.
+                let lookaheadSecs = (60 / appSettings.tempo) * (RECORD_LOOKAHEAD_STEPS / 4);
+                
+                // Example: Lookahead is 1.0s. Latency Nudge is -73ms. 
+                // We want to skip the first 1.0s + 0.073s of the recording.
+                finalOffset = lookaheadSecs - (nudgeMs / 1000); 
+                if (finalOffset < 0) finalOffset = 0;
+            } else {
+                // For pre-loaded drums, we actually shift their scheduling time to compensate.
+                actualPlayTime = time + (nudgeMs / 1000); 
             }
         }
 
@@ -1079,15 +1080,6 @@
         envelopeGain.gain.value = 0;
         source.connect(envelopeGain); 
         envelopeGain.connect(trackGains[tIdx]); 
-        
-        let actualPlayTime = time + (nudgeMs / 1000); 
-        let finalOffset = lookaheadSecs;
-
-        if (actualPlayTime < audioCtx.currentTime) {
-             finalOffset += (audioCtx.currentTime - actualPlayTime);
-             actualPlayTime = audioCtx.currentTime;
-        }
-        if (finalOffset < 0) finalOffset = 0;
         
         envelopeGain.gain.setValueAtTime(0, actualPlayTime);
         if (aSec > 0) {
