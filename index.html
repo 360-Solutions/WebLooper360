@@ -112,7 +112,6 @@
         .center-controls { display:flex; align-items:center; gap:4px; flex-grow:1; margin: 0 4px; justify-content: space-between;}
         .controls-right { display:flex; align-items:center; gap:4px; }
         
-        /* Shrunk the Mute/Solo buttons text size down to 8.5px and added letter-spacing */
         .ms-btn { flex-grow: 1; font-size: 8.5px; padding: 5px 0; letter-spacing: 0.5px;}
         
         .dropdown-panel { background: #e1e4e8; padding: 8px; border-radius: 6px; margin-bottom: 6px; display: none; border: 1px solid var(--border-color);}
@@ -254,7 +253,11 @@
             
             <div id="ob-step-4" class="calib-step">
                 <p class="modal-text" id="ob-result-text" style="text-align:center; font-weight:bold; font-size: 16px; margin-bottom: 5px;"></p>
-                <p style="font-size: 11px; text-align: center; color: #666; margin-top: 0;">Saving settings and getting ready...</p>
+                <p id="ob-saving-text" style="font-size: 11px; text-align: center; color: #666; margin-top: 0;">Saving settings and getting ready...</p>
+                <div id="ob-fail-actions" style="display:none; flex-direction: column; gap: 8px; margin-top: 15px;">
+                    <button class="action-btn" style="width:100%; border-color:var(--rec-red); color:var(--rec-red);" onclick="closeFailModal('ob')">TRY AGAIN</button>
+                    <button class="action-btn" style="width:100%; border-color:#d0d7de; color:var(--text-color);" onclick="skipCalibration('ob')">SKIP (USE DEFAULT LATENCY)</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1516,8 +1519,8 @@
                 let triggerCtxTime = audioCtx.currentTime + 0.5; 
                 
                 env.gain.setValueAtTime(0, audioCtx.currentTime);
-                env.gain.linearRampToValueAtTime(1, triggerCtxTime);
-                env.gain.setValueAtTime(1, triggerCtxTime + 0.05);  
+                env.gain.linearRampToValueAtTime(0.4, triggerCtxTime); // Reduced from 1.0 to 0.4 for speaker safety
+                env.gain.setValueAtTime(0.4, triggerCtxTime + 0.05);  
                 env.gain.exponentialRampToValueAtTime(0.001, triggerCtxTime + 0.20);
 
                 osc.start(triggerCtxTime);
@@ -1558,15 +1561,47 @@
         }, 1000);
     }
 
+    function closeFailModal(prefix) {
+        document.getElementById('onboarding-modal').style.display = 'none';
+        isCalibrating = false;
+        document.getElementById(`${prefix}-step-4`).style.display = 'none';
+        document.getElementById(`${prefix}-step-1`).style.display = 'block';
+    }
+
+    function skipCalibration(prefix) {
+        document.getElementById('onboarding-modal').style.display = 'none';
+        isCalibrating = false;
+        
+        // Reset modal view silently for next time
+        document.getElementById(`${prefix}-step-4`).style.display = 'none';
+        document.getElementById(`${prefix}-step-1`).style.display = 'block';
+
+        // Force initialize with a safe baseline latency
+        let safeNudge = -120;
+        document.getElementById('global-nudge-override').value = safeNudge;
+        appSettings.globalNudge = safeNudge;
+        appSettings.isInitialized = true; 
+        tracks.forEach((t, i) => { updateLaneNudge(i, safeNudge); });
+        saveSettings();
+        renderInitState();
+
+        // Start the engine
+        document.getElementById('play-btn').click();
+    }
+
     function finishCalibration(latencyResult, prefix) {
         document.getElementById(`${prefix}-step-3`).style.display = 'none';
         document.getElementById(`${prefix}-step-4`).style.display = 'block';
         
         const resultText = document.getElementById(`${prefix}-result-text`);
+        const savingText = document.getElementById(`${prefix}-saving-text`);
+        const failActions = document.getElementById('ob-fail-actions');
 
         if (latencyResult === -1) {
             resultText.style.color = "var(--rec-red)";
-            resultText.innerHTML = "TEST FAILED.<br><span style='font-size:12px; font-weight:normal;'>Did not hear the click.</span>";
+            resultText.innerHTML = "TEST FAILED.<br><span style='font-size:12px; font-weight:normal; color: var(--text-color);'>Did not hear the beep. Disconnect earbuds and ensure a clear path to the mic.</span>";
+            if (savingText) savingText.style.display = 'none';
+            if (failActions) failActions.style.display = 'flex';
         } else {
             let actualNudge = latencyResult; 
             resultText.style.color = "var(--gh-green)";
@@ -1579,6 +1614,9 @@
             tracks.forEach((t, i) => { updateLaneNudge(i, newNudge); });
             saveSettings();
             renderInitState();
+
+            if (savingText) savingText.style.display = 'block';
+            if (failActions) failActions.style.display = 'none';
         }
 
         if (micSource) { micSource.disconnect(); micSource = null; }
@@ -1586,13 +1624,17 @@
         if (currentMicStream) { currentMicStream.getTracks().forEach(track => track.stop()); currentMicStream = null; }
         initAudioEngine(false); 
 
-        setTimeout(() => {
-            if (prefix === 'ob') {
-                document.getElementById('onboarding-modal').style.display = 'none';
-                isCalibrating = false;
-                document.getElementById('play-btn').click();
-            }
-        }, 2500);
+        if (latencyResult !== -1) {
+            setTimeout(() => {
+                if (prefix === 'ob') {
+                    document.getElementById('onboarding-modal').style.display = 'none';
+                    isCalibrating = false;
+                    document.getElementById('ob-step-4').style.display = 'none';
+                    document.getElementById('ob-step-1').style.display = 'block';
+                    document.getElementById('play-btn').click();
+                }
+            }, 2500);
+        }
     }
 
     document.addEventListener('visibilitychange', () => {
