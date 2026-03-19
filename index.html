@@ -55,7 +55,6 @@
 
         .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
         
-        /* Sleek Support Links */
         .support-links-header { display: flex; gap: 12px; align-items: center; justify-content: flex-end; }
         .support-link { text-decoration: none; font-size: 10px; font-weight: 700; color: var(--text-dim); transition: color 0.2s; display: flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.5px;}
         .support-link:hover { color: var(--accent-blue); }
@@ -289,8 +288,8 @@
                 Building a pocket looper that works on a smartphone browser without an audio interface or wired headphones comes with a unique challenge: preventing the microphone from hearing and recording the app's own backing track (audio bleed). WebLooper solves this by briefly fooling your smartphone into thinking you're on a speakerphone call while you're in the recording window. That is why you will notice a slightly "lo-fi" quality while recording. But when you hit "DONE" and return to the main screen, it releases the microphone and switches back to higher-quality audio.
             </p>
             <p class="modal-text">
-                <strong>The 2-Beat Spotlight Moat:</strong><br>
-                To further solve latency and audio bleed across various sluggish devices, WebLooper uses an extreme spotlight cycle. The backing track drops out precisely two beats before the recording window starts, and remains muted until two beats after it finishes. You are essentially left to keep time using the visual grid during recording. It guarantees zero audio bleed.
+                <strong>The 1-Beat Spotlight Moat:</strong><br>
+                To further solve latency and audio bleed across various sluggish devices, WebLooper uses an extreme spotlight cycle. The backing track drops out precisely ONE beat before the recording window starts, and remains muted until ONE beat after it finishes. You are essentially left to keep time using the visual grid during recording. It guarantees zero audio bleed.
             </p>
         </div>
         <div class="modal-footer">
@@ -425,10 +424,14 @@
 
 <script>
     // =========================================================================
-    // WEBLOOPER JAVASCRIPT ENGINE
-    // Updated: Start Point Marker Logic & 2-Beat Spotlight Moat
+    // WEBLOOPER 360 JAVASCRIPT ENGINE
+    // Core Philosophy:
+    // 1. Grid absolute timing (Start Point Markers) to prevent Grid Drift.
+    // 2. Spotlight Moat (Muting backing tracks before/after) to prevent Bleed.
+    // 3. Independent Channel Strips (Gain -> Low Pass Filter -> Master).
     // =========================================================================
 
+    // --- APPLICATION STATE & SETTINGS ---
     let appSettings = {
         isInitialized: false,
         tempo: 120,
@@ -439,18 +442,19 @@
         trackModalVols: Array(8).fill(220),
         trackModalBackingVols: Array(8).fill(2.2),
         trackAttacks: Array(8).fill(15),
-        trackReleases: Array(8).fill(25)
+        trackReleases: Array(8).fill(25),
+        trackLpfs: Array(8).fill(20000) // Default Low Pass Filter: 20000Hz (Wide Open)
     };
 
     const tracks = [
-        { name: 'ds_kick1.wav', steps: [0, 4], bars: 1, choke: true, mute: false, solo: false, buffer: null, rawArrayBuffer: null, lastSource: null, lastGain: null, lastEnvelope: null, volume: 80, nudge: -120, modalVol: 220, modalBackingVol: 2.2, attack: 15, release: 25, isUserSample: false },
-        { name: 'ds_snare1.wav', steps: [8], bars: 1, choke: true, mute: false, solo: false, buffer: null, rawArrayBuffer: null, lastSource: null, lastGain: null, lastEnvelope: null, volume: 80, nudge: -120, modalVol: 220, modalBackingVol: 2.2, attack: 15, release: 25, isUserSample: false },
-        { name: 'ds_hihat1.wav', steps: [0, 2, 4, 6, 8, 10, 12, 14], bars: 1, choke: true, mute: false, solo: false, buffer: null, rawArrayBuffer: null, lastSource: null, lastGain: null, lastEnvelope: null, volume: 80, nudge: -120, modalVol: 220, modalBackingVol: 2.2, attack: 15, release: 25, isUserSample: false },
-        { name: 'EMPTY', steps: [], bars: 1, choke: true, mute: false, solo: false, buffer: null, rawArrayBuffer: null, lastSource: null, lastGain: null, lastEnvelope: null, volume: 80, nudge: -120, modalVol: 220, modalBackingVol: 2.2, attack: 15, release: 25, isUserSample: false },
-        { name: 'EMPTY', steps: [], bars: 1, choke: true, mute: false, solo: false, buffer: null, rawArrayBuffer: null, lastSource: null, lastGain: null, lastEnvelope: null, volume: 80, nudge: -120, modalVol: 220, modalBackingVol: 2.2, attack: 15, release: 25, isUserSample: false },
-        { name: 'EMPTY', steps: [], bars: 1, choke: true, mute: false, solo: false, buffer: null, rawArrayBuffer: null, lastSource: null, lastGain: null, lastEnvelope: null, volume: 80, nudge: -120, modalVol: 220, modalBackingVol: 2.2, attack: 15, release: 25, isUserSample: false },
-        { name: 'EMPTY', steps: [], bars: 1, choke: true, mute: false, solo: false, buffer: null, rawArrayBuffer: null, lastSource: null, lastGain: null, lastEnvelope: null, volume: 80, nudge: -120, modalVol: 220, modalBackingVol: 2.2, attack: 15, release: 25, isUserSample: false },
-        { name: 'EMPTY', steps: [], bars: 1, choke: true, mute: false, solo: false, buffer: null, rawArrayBuffer: null, lastSource: null, lastGain: null, lastEnvelope: null, volume: 80, nudge: -120, modalVol: 220, modalBackingVol: 2.2, attack: 15, release: 25, isUserSample: false }
+        { name: 'ds_kick1.wav', steps: [0, 4], bars: 1, choke: true, mute: false, solo: false, buffer: null, rawArrayBuffer: null, lastSource: null, lastGain: null, lastEnvelope: null, volume: 80, nudge: -120, modalVol: 220, modalBackingVol: 2.2, attack: 15, release: 25, lpf: 20000, isUserSample: false },
+        { name: 'ds_snare1.wav', steps: [8], bars: 1, choke: true, mute: false, solo: false, buffer: null, rawArrayBuffer: null, lastSource: null, lastGain: null, lastEnvelope: null, volume: 80, nudge: -120, modalVol: 220, modalBackingVol: 2.2, attack: 15, release: 25, lpf: 20000, isUserSample: false },
+        { name: 'ds_hihat1.wav', steps: [0, 2, 4, 6, 8, 10, 12, 14], bars: 1, choke: true, mute: false, solo: false, buffer: null, rawArrayBuffer: null, lastSource: null, lastGain: null, lastEnvelope: null, volume: 80, nudge: -120, modalVol: 220, modalBackingVol: 2.2, attack: 15, release: 25, lpf: 20000, isUserSample: false },
+        { name: 'EMPTY', steps: [], bars: 1, choke: true, mute: false, solo: false, buffer: null, rawArrayBuffer: null, lastSource: null, lastGain: null, lastEnvelope: null, volume: 80, nudge: -120, modalVol: 220, modalBackingVol: 2.2, attack: 15, release: 25, lpf: 20000, isUserSample: false },
+        { name: 'EMPTY', steps: [], bars: 1, choke: true, mute: false, solo: false, buffer: null, rawArrayBuffer: null, lastSource: null, lastGain: null, lastEnvelope: null, volume: 80, nudge: -120, modalVol: 220, modalBackingVol: 2.2, attack: 15, release: 25, lpf: 20000, isUserSample: false },
+        { name: 'EMPTY', steps: [], bars: 1, choke: true, mute: false, solo: false, buffer: null, rawArrayBuffer: null, lastSource: null, lastGain: null, lastEnvelope: null, volume: 80, nudge: -120, modalVol: 220, modalBackingVol: 2.2, attack: 15, release: 25, lpf: 20000, isUserSample: false },
+        { name: 'EMPTY', steps: [], bars: 1, choke: true, mute: false, solo: false, buffer: null, rawArrayBuffer: null, lastSource: null, lastGain: null, lastEnvelope: null, volume: 80, nudge: -120, modalVol: 220, modalBackingVol: 2.2, attack: 15, release: 25, lpf: 20000, isUserSample: false },
+        { name: 'EMPTY', steps: [], bars: 1, choke: true, mute: false, solo: false, buffer: null, rawArrayBuffer: null, lastSource: null, lastGain: null, lastEnvelope: null, volume: 80, nudge: -120, modalVol: 220, modalBackingVol: 2.2, attack: 15, release: 25, lpf: 20000, isUserSample: false }
     ];
 
     const sampleFiles = ['ds_kick1.wav', 'ds_snare1.wav', 'ds_hihat1.wav', 'ds_hihat2.wav', 'ds_clapsn1.wav', 'ds_kick2.wav'];
@@ -459,20 +463,24 @@
     // --- AUDIO SYSTEM GLOBALS ---
     let audioCtx = null;
     let masterGain = null;
+    
+    // Channel Strip Arrays
     let trackGains = new Array(8).fill(null); 
+    let trackFilters = new Array(8).fill(null); // The Biquad Low Pass Filters for High Frequency Hiss
     
     let isPlaying = false, currentStep = 0, nextStepTime = 0, activeTrackIdx = null;
     
     // --- ABSOLUTE STEP STATE MACHINE (CORE RECORDING LOGIC) ---
     // Controls timing for mic access, backing track muting, and lookahead buffering
-    let recState = 'IDLE'; // IDLE, WAITING_SYNC, PRE_ROLL, MIC_STARTING, VISUAL_RECORDING, TAIL_RECORDING
+    let recState = 'IDLE'; // States: IDLE, WAITING_SYNC, PRE_ROLL, MIC_STARTING, VISUAL_RECORDING, TAIL_RECORDING
     let targetRecordStartStep = 0;
     let targetRecordEndStep = 0;
     let targetMicStopStep = 0;
 
-    // INCREASED 2-BEAT SAFETY MOAT FOR ANDROID BLEED PREVENTION
-    const RECORD_LOOKAHEAD_STEPS = 8; // 2 Full Beats Early
-    const RECORD_TAIL_STEPS = 8;      // 2 Full Beats Late for crossfade tail/latency buffer
+    // 1-BEAT SAFETY MOAT FOR LATENCY BLEED PREVENTION
+    // 4 Steps = 1 Full Beat in a standard 16-step grid.
+    const RECORD_LOOKAHEAD_STEPS = 4; 
+    const RECORD_TAIL_STEPS = 4;      
     
     let targetBarLength = 16;
     let scheduleAheadTime = 0.50; 
@@ -484,7 +492,7 @@
     let currentMicStream = null, micAnalyser = null, micSource = null;
     let isCalibrating = false;
 
-    // Initialize track steps
+    // Initialize track steps array (64 max steps for 4 bars)
     tracks.forEach(t => { 
         let s = new Array(64).fill(false);
         if(t.steps) t.steps.forEach(idx => s[idx] = true);
@@ -507,6 +515,7 @@
         document.getElementById('global-nudge-override').value = appSettings.globalNudge || -120;
         document.getElementById('current-nudge-text').innerText = (appSettings.globalNudge || -120) + 'ms';
 
+        // Hydrate track arrays from saved memory
         tracks.forEach((t, i) => {
             t.volume = appSettings.trackVols && appSettings.trackVols[i] !== undefined ? appSettings.trackVols[i] : 80;
             t.nudge = appSettings.trackNudges && appSettings.trackNudges[i] !== undefined ? appSettings.trackNudges[i] : -120;
@@ -514,6 +523,7 @@
             t.modalBackingVol = appSettings.trackModalBackingVols && appSettings.trackModalBackingVols[i] !== undefined ? appSettings.trackModalBackingVols[i] : 2.2;
             t.attack = appSettings.trackAttacks && appSettings.trackAttacks[i] !== undefined ? appSettings.trackAttacks[i] : 15;
             t.release = appSettings.trackReleases && appSettings.trackReleases[i] !== undefined ? appSettings.trackReleases[i] : 25;
+            t.lpf = appSettings.trackLpfs && appSettings.trackLpfs[i] !== undefined ? appSettings.trackLpfs[i] : 20000;
         });
 
         renderInitState();
@@ -563,7 +573,8 @@
                 trackModalVols: Array(8).fill(220),
                 trackModalBackingVols: Array(8).fill(2.2),
                 trackAttacks: Array(8).fill(15),
-                trackReleases: Array(8).fill(25)
+                trackReleases: Array(8).fill(25),
+                trackLpfs: Array(8).fill(20000)
             };
 
             const defaultNames = ['ds_kick1.wav', 'ds_snare1.wav', 'ds_hihat1.wav', 'EMPTY', 'EMPTY', 'EMPTY', 'EMPTY', 'EMPTY'];
@@ -578,7 +589,7 @@
                 t.bars = 1; t.choke = true; t.mute = false; t.solo = false;
                 t.rawArrayBuffer = null;
                 t.volume = 80; t.nudge = savedNudge; t.modalVol = 220; t.modalBackingVol = 2.2;
-                t.attack = 15; t.release = 25; t.isUserSample = false;
+                t.attack = 15; t.release = 25; t.isUserSample = false; t.lpf = 20000;
                 t.buffer = null; 
             });
 
@@ -714,6 +725,23 @@
         saveSettings();
     }
 
+    // LOW PASS FILTER HANDLER
+    function updateLaneLPF(tIdx, val) {
+        let parsed = parseInt(val) || 20000;
+        tracks[tIdx].lpf = parsed;
+        appSettings.trackLpfs[tIdx] = parsed;
+        
+        // Visual text update. If 20000, call it "OFF"
+        let displayVal = parsed === 20000 ? "OFF (20kHz)" : parsed + 'Hz';
+        document.getElementById(`lane-lpf-val-${tIdx}`).innerText = displayVal;
+
+        // Apply audio change immediately if engine is alive
+        if (trackFilters[tIdx] && audioCtx) {
+            trackFilters[tIdx].frequency.setTargetAtTime(parsed, audioCtx.currentTime, 0.015);
+        }
+        saveSettings();
+    }
+
     document.getElementById('modal-nudge').oninput = function() {
         if(activeTrackIdx !== null) updateLaneNudge(activeTrackIdx, this.value);
     };
@@ -791,12 +819,14 @@
             const isEmpty = track.name === 'EMPTY';
             const nameClass = isEmpty ? 'sample-name-btn empty-track' : 'sample-name-btn';
 
+            // ADDED: "LPF" Button to access the Low Pass Filter in the center controls
             lane.innerHTML = `
             <div class="track-controls">
                 <div class="track-number">${tIdx + 1}</div>
                 <button class="bubble-btn ${nameClass}" onclick="openModal(${tIdx})">${track.name}</button>
                 <div class="center-controls">
-                    <button class="bubble-btn" onclick="toggleDropdown('vol-panel-${tIdx}')" style="min-width:32px;">VOL</button>
+                    <button class="bubble-btn" onclick="toggleDropdown('vol-panel-${tIdx}')" style="min-width:30px;">VOL</button>
+                    <button class="bubble-btn" onclick="toggleDropdown('filter-panel-${tIdx}')" style="min-width:30px;">LPF</button>
                     <button class="bubble-btn ms-btn ${track.mute ? 'active-mute' : ''}" onclick="toggleMute(${tIdx})">MUTE</button>
                     <button class="bubble-btn ms-btn ${track.solo ? 'active-solo' : ''}" onclick="toggleSolo(${tIdx})">SOLO</button>
                 </div>
@@ -814,6 +844,15 @@
                 </span>
                 <input type="range" class="orange-slider" min="0" max="300" value="${track.volume}" step="5" oninput="updateLaneVol(${tIdx}, this.value)">
             </div>
+
+            <div class="dropdown-panel" id="filter-panel-${tIdx}">
+                <span class="slider-label" style="display:flex; justify-content:space-between;">
+                    <span>Cut High Freq Hiss (Low Pass Filter)</span>
+                    <span id="lane-lpf-val-${tIdx}" style="color:var(--text-color);">${track.lpf === 20000 ? 'OFF (20kHz)' : track.lpf + 'Hz'}</span>
+                </span>
+                <input type="range" class="blue-slider" min="500" max="20000" value="${track.lpf}" step="100" oninput="updateLaneLPF(${tIdx}, this.value)">
+            </div>
+
             <div class="dropdown-panel" id="nudge-panel-${tIdx}">
                 <span class="slider-label" style="display:flex; justify-content:space-between;">
                     <span>Track Nudge (Left=Earlier | Right=Later)</span>
@@ -827,7 +866,17 @@
         });
     }
 
-    function toggleDropdown(panelId) { const panel = document.getElementById(panelId); panel.style.display = panel.style.display === 'block' ? 'none' : 'block'; }
+    function toggleDropdown(panelId) { 
+        // Auto-close others in this track to keep UI clean
+        let parent = document.getElementById(panelId).parentElement;
+        parent.querySelectorAll('.dropdown-panel').forEach(p => {
+            if(p.id !== panelId) p.style.display = 'none';
+        });
+
+        const panel = document.getElementById(panelId); 
+        panel.style.display = panel.style.display === 'block' ? 'none' : 'block'; 
+    }
+    
     function toggleChoke(tIdx) { tracks[tIdx].choke = !tracks[tIdx].choke; renderSequencer(); }
     
     function toggleMute(tIdx) { 
@@ -842,7 +891,7 @@
         updateTrackGains(); renderSequencer(); 
     }
 
-    // --- AUDIO CONTEXT PRE-FETCHING ---
+    // --- AUDIO CONTEXT & ROUTING PRE-FETCHING ---
     let fetchPromise = preFetchAll();
     async function preFetchAll() {
         const promises = sampleFiles.map(async (file) => {
@@ -862,9 +911,16 @@
         masterGain.gain.value = appSettings.masterVol;
         masterGain.connect(audioCtx.destination);
 
+        // --- CHANNEL STRIP ROUTING ---
+        // Playback -> EnvelopeGain -> TrackGain -> LOW PASS FILTER -> MasterGain
         for(let i=0; i<8; i++) {
+            trackFilters[i] = audioCtx.createBiquadFilter();
+            trackFilters[i].type = 'lowpass';
+            trackFilters[i].frequency.value = tracks[i].lpf || 20000;
+            trackFilters[i].connect(masterGain);
+
             trackGains[i] = audioCtx.createGain();
-            trackGains[i].connect(masterGain);
+            trackGains[i].connect(trackFilters[i]);
         }
         updateTrackGains();
 
@@ -979,13 +1035,13 @@
                 targetBarLength = tracks[activeTrackIdx].bars * 16;
                 const laneRelative = currentStep % targetBarLength;
                 
-                // Absolute Step State Machine for Recording
+                // --- Absolute Step State Machine for Recording ---
                 
                 if (recState === 'WAITING_SYNC' && laneRelative === 0) {
                     recState = 'PRE_ROLL';
                 }
 
-                // 2-BEAT SPOTLIGHT START: Backing track mutes early to ensure zero bleed
+                // 1-BEAT SPOTLIGHT START: Backing track mutes early to ensure zero bleed
                 if (recState === 'PRE_ROLL' && laneRelative === ((targetBarLength - RECORD_LOOKAHEAD_STEPS) % targetBarLength)) {
                     recState = 'MIC_STARTING';
                     targetRecordStartStep = currentStep + RECORD_LOOKAHEAD_STEPS; // Lock musical 1
@@ -1018,7 +1074,7 @@
                     setTimeout(updateRecBtnUI, delay); 
                 }
 
-                // 2-BEAT SPOTLIGHT END: Tail completes, hardware mic stops, track unmutes
+                // 1-BEAT SPOTLIGHT END: Tail completes, hardware mic stops, track unmutes
                 if (recState === 'TAIL_RECORDING' && currentStep === targetMicStopStep) {
                     recState = 'IDLE';
                     
@@ -1032,6 +1088,7 @@
                 }
             }
 
+            // Loop through and schedule all active nodes
             tracks.forEach((track, i) => {
                 if (track.steps[currentStep % (track.bars * 16)]) { 
                     playSample(track.buffer, nextStepTime, track.nudge, track, i); 
@@ -1044,13 +1101,14 @@
         if (isPlaying) { setTimeout(scheduler, 25); }
     }
 
+    // --- AUDIO PLAYBACK TRIGGER ---
     function playSample(buffer, time, nudgeMs = 0, trackObj = null, tIdx) {
         if (!buffer || !audioCtx || !trackGains[tIdx]) return;
         
         let aSec = 0.015;
         let rSec = 0.025;
         
-        // START MARKER GRID-LOCK FIX
+        // --- THE START MARKER GRID-LOCK ALGORITHM ---
         let actualPlayTime = time; // Default: strict grid adherence
         let finalOffset = 0;       // Default: read file from start
 
@@ -1059,16 +1117,15 @@
             if (typeof trackObj.release === 'number') rSec = trackObj.release / 1000;
             
             if (trackObj.isUserSample) {
-                // If it's a recorded loop, DO NOT shift the play head (actualPlayTime).
-                // Instead, shift the START MARKER reading position inside the file by Lookahead + Latency.
+                // If it's a user loop, DO NOT shift the play head trigger time (`actualPlayTime`).
+                // This keeps it rigidly locked to the grid to prevent Grid Drift.
+                // Instead, shift the START MARKER reading position *inside* the file by (Lookahead + Latency).
                 let lookaheadSecs = (60 / appSettings.tempo) * (RECORD_LOOKAHEAD_STEPS / 4);
                 
-                // Example: Lookahead is 1.0s. Latency Nudge is -73ms. 
-                // We want to skip the first 1.0s + 0.073s of the recording.
                 finalOffset = lookaheadSecs - (nudgeMs / 1000); 
                 if (finalOffset < 0) finalOffset = 0;
             } else {
-                // For pre-loaded drums, we actually shift their scheduling time to compensate.
+                // For pre-loaded drums, we simply nudge their scheduling trigger time.
                 actualPlayTime = time + (nudgeMs / 1000); 
             }
         }
@@ -1313,6 +1370,7 @@
 
         forceStopEngine();
 
+        // Sever the microphone line aggressively so it releases the phone's hardware lock
         if (micSource) { micSource.disconnect(); micSource = null; }
         micAnalyser = null;
         if (currentMicStream) { currentMicStream.getTracks().forEach(track => track.stop()); currentMicStream = null; }
@@ -1327,13 +1385,15 @@
         document.getElementById('sample-modal').style.display = 'none'; 
         
         renderSequencer();
-        await initAudioEngine(false);
+        await initAudioEngine(false); // Rebuild engine without mic
 
+        // ANDROID BUG FIX: Increase delay to 400ms before auto-playing
+        // Slower devices need this extra buffer time to fully rebuild the AudioContext graph
         if (wasPlaying) {
             setTimeout(() => {
                 const playBtn = document.getElementById('play-btn');
                 if (playBtn) playBtn.click();
-            }, 50); 
+            }, 400); 
         }
     }
     
