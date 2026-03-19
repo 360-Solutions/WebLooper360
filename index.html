@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>WebLooper 360</title>
+    <title>WebLooper360</title>
     
     <style>
         :root {
@@ -179,7 +179,7 @@
     <header>
         <div class="header-left">
             <div id="app-title">
-                <span class="title-box">WebLooper 360</span> 
+                <span class="title-box">WebLooper360</span> 
             </div>
             <div class="creator-text">By Jeremiah Keller</div>
         </div>
@@ -441,7 +441,7 @@
 
 <script>
     // =========================================================================
-    // WEBLOOPER 360 JAVASCRIPT ENGINE
+    // WEBLOOPER360 JAVASCRIPT ENGINE
     // Core Philosophy:
     // 1. Grid absolute timing (Start Point Markers) to prevent Grid Drift.
     // 2. Spotlight Moat (Muting backing tracks before/after) to prevent Bleed.
@@ -567,7 +567,7 @@
     }
 
     function factoryReset() {
-        if (confirm("Are you sure you want to reset WebLooper 360?\n\nThis will clear all saved volume settings, latency nudges, and memory, returning it to absolute factory defaults.")) {
+        if (confirm("Are you sure you want to reset WebLooper360?\n\nThis will clear all saved volume settings, latency nudges, and memory, returning it to absolute factory defaults.")) {
             localStorage.removeItem('jLooperSettings');
             location.reload(); 
         }
@@ -1519,8 +1519,8 @@
                 let triggerCtxTime = audioCtx.currentTime + 0.5; 
                 
                 env.gain.setValueAtTime(0, audioCtx.currentTime);
-                env.gain.linearRampToValueAtTime(0.4, triggerCtxTime); // Reduced from 1.0 to 0.4 for speaker safety
-                env.gain.setValueAtTime(0.4, triggerCtxTime + 0.05);  
+                env.gain.linearRampToValueAtTime(1.0, triggerCtxTime);
+                env.gain.setValueAtTime(1.0, triggerCtxTime + 0.05);  
                 env.gain.exponentialRampToValueAtTime(0.001, triggerCtxTime + 0.20);
 
                 osc.start(triggerCtxTime);
